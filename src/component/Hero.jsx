@@ -45,8 +45,8 @@ const Hero = () => {
           </div>
           
           <div className="mb-6">
-            <p className="mb-2 text-whitish text-base  text-justify md:text-lg lg:text-xl">Call apple support how To fix this issue</p>
-            <p className="text-whitish text-sm  text-justify md:text-base">+1 (833) 638 3086</p>
+            <p className="mb-2 text-whitish text-base  md:text-lg lg:text-xl">Call apple support how To fix this issue</p>
+            <p className="text-whitish text-sm  md:text-base">+1 (833) 638 3086</p>
           </div>
           
           <button className="w-full bg-[#ff4b4b] text-whitish py-3 rounded-lg hover:bg-[#ff3b30] transition-colors text-sm md:text-base lg:text-lg">
