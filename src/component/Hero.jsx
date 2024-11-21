@@ -159,10 +159,7 @@ const Hero = () => {
             OK
           </button>
         </div>
-        <video src={video}  autoPlay
-        muted
-        loop
-        controls></video>
+        
       </div>
     )
 }
