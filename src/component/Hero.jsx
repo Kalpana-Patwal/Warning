@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import Warning from '../assets/warning.webp'
 import Setting from '../assets/Settings1.webp'
+import video from '../assets/Video1.mp4'
 
 const Hero = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -158,6 +159,10 @@ const Hero = () => {
             OK
           </button>
         </div>
+        <video src={video}  autoPlay
+        muted
+        loop
+        controls></video>
       </div>
     )
 }
