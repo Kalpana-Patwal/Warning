@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"
 import Warning from '../assets/warning.webp'
 import Setting from '../assets/Settings1.webp'
-import video from '../assets/Video1.mp4'
+
 
 const Hero = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -49,19 +49,19 @@ const Hero = () => {
         }, { passive: false });
 
         try {
-            // More thorough feature detection
+          
             if (
                 window.screen?.orientation?.lock && 
                 typeof window.screen.orientation.lock === 'function' && 
-                window.screen.orientation.type // Check if orientation API is actually available
+                window.screen.orientation.type 
             ) {
                 window.screen.orientation.lock('portrait').catch(() => {
-                    // Silently fail - orientation lock isn't crucial for functionality
+                    
                     console.log('Orientation lock not available - continuing without it');
                 });
             }
         } catch {
-            // Silently continue if orientation locking fails
+            
             console.log('Orientation API not supported - continuing without it');
         }
     
@@ -120,7 +120,7 @@ const Hero = () => {
           
           <div className="mb-3 [&>*]:text-whitish">
             <p className="mb-1 !text-whitish text-sm md:text-base">Call apple support how To fix this issue</p>
-            <p className="!text-whitish text-xs">+1 (833) 638 3086</p>
+            <p className="!text-whitish text-xs">1 (843) 480 9415</p>
           </div>
           
           <button 
